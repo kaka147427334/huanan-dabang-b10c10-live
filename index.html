@@ -46,7 +46,12 @@
   .up{color:var(--green)} .down{color:var(--red)}
   input.num{width:62px;background:#0d1430;border:1px solid var(--line);border-radius:8px;color:#fff;
     text-align:right;padding:5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
-  input.num:focus{outline:none;border-color:var(--blue)}
+  input.num:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(90,169,255,.25)}
+  input.num::-webkit-outer-spin-button,input.num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input.num{-moz-appearance:textfield;text-align:center;font-weight:700}
+  input.num.edited{border-color:var(--gold);background:#1b1508;color:#ffd873}
+  tfoot tr{background:rgba(90,169,255,.10)}
+  tfoot td{border-top:2px solid var(--line)}
   .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   button{background:#1e2a55;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:7px 14px;font-size:13px;cursor:pointer}
   button:hover{background:#27356b}
@@ -74,13 +79,13 @@
 <div class="hlbox" id="hlbox"></div>
 
 <h2>B10 打榜 <small>基数 1200 元/台 · 政策期 10.11-10.25</small></h2>
-<div class="card"><table id="t-b10"><thead id="h-b10"></thead><tbody id="b-b10"></tbody></table></div>
+<div class="card"><table id="t-b10"><thead id="h-b10"></thead><tbody id="b-b10"></tbody><tfoot id="f-b10"></tfoot></table></div>
 
 <h2>C10 打榜 <small>基数 1500 元/台 · 政策期 10.11-10.25</small></h2>
-<div class="card"><table id="t-c10"><thead id="h-c10"></thead><tbody id="b-c10"></tbody></table></div>
+<div class="card"><table id="t-c10"><thead id="h-c10"></thead><tbody id="b-c10"></tbody><tfoot id="f-c10"></tfoot></table></div>
 
 <div class="btnrow">
-  <button class="primary" onclick="recalc()">重新计算</button>
+  <button class="primary" onclick="recalc(1)">重新计算</button>
   <button onclick="resetAll()">恢复 17:00 原始数据</button>
   <button onclick="clearAdd()">今日新增全部归零</button>
   <button onclick="exportCsv()">导出 CSV（含明细）</button>
@@ -109,7 +114,7 @@
   <div class="note">口径说明：页面源数据为「截至 10.24 锁单、日均按 14 天」；本看板按政策期完整 15 天折算实时系数 A。<b>因此今日（10.25）若无新增，系数 A 会被 15 天分母稀释，存在跌档风险</b>，已用「昨日口径返利」列对标。</div>
 </div>
 
-<div class="footnote">看板生成于 2026-10-25 20:00 · 数据在浏览器本地实时计算，改动「今日新增」后点「重新计算」即可 · Windows 按 Ctrl+F5 / Mac 按 Cmd+Shift+R 刷新缓存</div>
+<div class="footnote">看板生成于 2026-10-25 20:21 · 直接在「今日新增 <span style="color:#ffcc4d">✎</span>」列输入数字，全表自动实时重算（改动过的格子会变金色）· 数据在浏览器本地计算，不上传 · Windows 按 Ctrl+F5 / Mac 按 Cmd+Shift+R 刷新缓存</div>
 
 </div>
 
@@ -169,28 +174,47 @@ function nextTier(r, model, qty){
 const HEAD = ['集团 / 同城主体','1-10 锁单','上旬日均','昨日(24号)累计','今日新增','实时锁单','100%档目标','距100%缺口','实时系数A','实时档位','实时单价(元/台)','实时返利预估','昨日口径返利','今日增量'];
 function renderHead(id){
   document.getElementById(id).innerHTML = '<tr><th class="l">'+HEAD[0]+'</th>' +
-    HEAD.slice(1).map((h,i)=>'<th'+(i===3?' title="今日新增可编辑"':'')+'>'+h+'</th>').join('') + '</tr>';
+    HEAD.slice(1).map((h,i)=>'<th'+(i===3?' title="可直接输入数字，全表自动实时重算"':'')+'>'+h+(i===3?' <span style="color:#ffcc4d">✎</span>':'')+'</th>').join('') + '</tr>';
 }
+// 行骨架只在初始化时建一次（含 input），后续只刷新派生单元格，避免输入被重建打断
 function rowHtml(r, model, idx){
+  const pv = prevMetrics(r, model);
+  return '<tr id="tr-'+model+'-'+idx+'">'+
+    '<td class="l"><b>'+r.group+'</b><div style="font-size:11px;color:#8b98c4">'+r.entity.replace('合作伙伴-东莞市-','')+'</div></td>'+
+    '<td>'+fmt(r.d1)+'</td><td>'+r.d1Avg.toFixed(1)+'</td><td>'+fmt(r.prev)+'</td>'+
+    '<td><input class="num" type="number" min="0" step="1" inputmode="numeric" '+
+      'id="in-'+model+'-'+idx+'" value="'+r.todayAdd+'" oninput="q()" onchange="q()" onfocus="this.select()"></td>'+
+    '<td id="c-qty-'+model+'-'+idx+'"></td><td>'+fmt(r.target100)+'</td><td id="c-gap-'+model+'-'+idx+'"></td>'+
+    '<td id="c-coef-'+model+'-'+idx+'"></td><td id="c-tier-'+model+'-'+idx+'"></td>'+
+    '<td id="c-unit-'+model+'-'+idx+'"></td><td id="c-reb-'+model+'-'+idx+'"></td>'+
+    '<td>'+money(pv.rebate)+'</td>'+
+    '<td id="c-delta-'+model+'-'+idx+'"></td>'+
+  '</tr>';
+}
+function paintRow(r, model, idx){
   const qty = r.prev + r.todayAdd;
   const now = nowMetrics(r, model, qty);
   const pv  = prevMetrics(r, model);
   const delta = now.rebate - pv.rebate;
-  return '<tr class="'+(now.rebate===0?'zero':'')+'">'+
-    '<td class="l"><b>'+r.group+'</b><div style="font-size:11px;color:#8b98c4">'+r.entity.replace('合作伙伴-东莞市-','')+'</div></td>'+
-    '<td>'+fmt(r.d1)+'</td><td>'+r.d1Avg.toFixed(1)+'</td><td>'+fmt(r.prev)+'</td>'+
-    '<td><input class="num" id="in-'+model+'-'+idx+'" value="'+r.todayAdd+'" oninput="q()"></td>'+
-    '<td><b>'+fmt(qty)+'</b></td><td>'+fmt(r.target100)+'</td><td>'+fmt(now.gap)+'</td>'+
-    '<td>'+pct(now.coef)+'</td><td>'+tierLabel(model,now.coef,now.unit)+'</td>'+
-    '<td><b>'+fmt(now.unit)+'</b></td><td><b>'+money(now.rebate)+'</b></td>'+
-    '<td>'+money(pv.rebate)+'</td>'+
-    '<td class="'+(delta>0?'up':(delta<0?'down':''))+'">'+(delta>0?'+':'')+fmt(delta).replace('-','-')+'</td>'+
-  '</tr>';
+  const cid = k => 'c-'+k+'-'+model+'-'+idx;
+  const set = (k, html) => { const e=document.getElementById(cid(k)); if(e) e.innerHTML = html; };
+  set('qty',  '<b>'+fmt(qty)+'</b>');
+  set('gap',  fmt(now.gap));
+  set('coef', pct(now.coef));
+  set('tier', tierLabel(model, now.coef, now.unit));
+  set('unit', '<b>'+fmt(now.unit)+'</b>');
+  set('reb',  '<b>'+money(now.rebate)+'</b>');
+  const d = document.getElementById(cid('delta'));
+  if(d){ d.className = delta>0?'up':(delta<0?'down':''); d.textContent = (delta>0?'+':'')+fmt(delta); }
+  const tr = document.getElementById('tr-'+model+'-'+idx);
+  if(tr) tr.className = now.rebate===0 ? 'zero' : '';
+  const inp = document.getElementById('in-'+model+'-'+idx);
+  if(inp) inp.classList.toggle('edited', r.todayAdd !== r.todayAdd0);
 }
 function totalsHtml(rows, model){
   let qty=0, nowReb=0, pvReb=0, d1=0, gap=0, prev=0, inProfit=0;
   rows.forEach((r,i)=>{
-    const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+    const q = r.prev + r.todayAdd;
     const now = nowMetrics(r, model, q), pv = prevMetrics(r, model);
     qty+=q; nowReb+=now.rebate; pvReb+=pv.rebate; d1+=r.d1; gap+=now.gap; prev+=r.prev;
     if(now.rebate>0) inProfit++;
@@ -201,7 +225,7 @@ function renderNext(){
   const rows=[];
   [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
     arr.forEach((r,i)=>{
-      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const q = r.prev + r.todayAdd;
       const nx = nextTier(r, model, q);
       if(nx) rows.push({model, group:r.group, entity:r.entity, cur:nowMetrics(r,model,q), nx, q});
     });
@@ -219,7 +243,7 @@ function renderKpis(){
   let nowAll=0, pvAll=0, qtyB=0, qtyC=0, inProfit=0, gapAll=0;
   [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
     arr.forEach((r,i)=>{
-      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const q = r.prev + r.todayAdd;
       const now = nowMetrics(r,model,q), pv = prevMetrics(r,model);
       nowAll += now.rebate; pvAll += pv.rebate; gapAll += now.gap;
       if(now.rebate>0) inProfit++;
@@ -236,28 +260,56 @@ function renderKpis(){
 }
 function kpi(cls,k,v,x){ return '<div class="kpi '+cls+'"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="x">'+x+'</div></div>'; }
 
-function recalc(){
-  renderHead('h-b10'); renderHead('h-c10');
-  document.getElementById('b-b10').innerHTML = DATA.b10.map((r,i)=>rowHtml(r,'B10',i)).join('');
-  document.getElementById('b-c10').innerHTML = DATA.c10.map((r,i)=>rowHtml(r,'C10',i)).join('');
-  document.getElementById('b-b10').insertAdjacentHTML('beforeend', totalsHtml(DATA.b10,'B10'));
-  document.getElementById('b-c10').insertAdjacentHTML('beforeend', totalsHtml(DATA.c10,'C10'));
+// 把输入框当前值读回 DATA（唯一的一处真值来源）
+function syncInputs(){
+  [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
+    arr.forEach((r,i)=>{
+      const el = document.getElementById('in-'+model+'-'+i);
+      if(!el) return;
+      const v = parseInt(el.value, 10);
+      r.todayAdd = (isNaN(v) || v < 0) ? 0 : v;
+    });
+  });
+}
+let built = false;
+function recalc(force){
+  syncInputs();
+  if(force || !built){
+    renderHead('h-b10'); renderHead('h-c10');
+    document.getElementById('b-b10').innerHTML = DATA.b10.map((r,i)=>rowHtml(r,'B10',i)).join('');
+    document.getElementById('b-c10').innerHTML = DATA.c10.map((r,i)=>rowHtml(r,'C10',i)).join('');
+    built = true;
+  }
+  // 只刷新派生单元格，input 保持原 DOM 节点 → 输入不被打断
+  DATA.b10.forEach((r,i)=>paintRow(r,'B10',i));
+  DATA.c10.forEach((r,i)=>paintRow(r,'C10',i));
+  document.getElementById('f-b10').innerHTML = totalsHtml(DATA.b10,'B10');
+  document.getElementById('f-c10').innerHTML = totalsHtml(DATA.c10,'C10');
   const pot = renderNext();
   renderKpis();
   buildHl(pot);
 }
 let t=null;
-function q(){ clearTimeout(t); t=setTimeout(recalc, 250); }
-function resetAll(){ location.reload(); }
+function q(){ clearTimeout(t); t=setTimeout(function(){ recalc(); }, 150); }
+function resetAll(){
+  DATA.b10.concat(DATA.c10).forEach(r=>{ r.todayAdd = r.todayAdd0; });
+  document.querySelectorAll('input.num').forEach(el=>{
+    const p = el.id.split('-');           // in-<model>-<idx>
+    const arr = (p[1]==='B10') ? DATA.b10 : DATA.c10;
+    el.value = arr[Number(p[2])].todayAdd0;
+    el.classList.remove('edited');
+  });
+  recalc();
+}
 function clearAdd(){
-  document.querySelectorAll('input.num').forEach(i=>i.value=0);
+  document.querySelectorAll('input.num').forEach(el=>{ el.value = 0; });
   recalc();
 }
 function buildHl(pot){
   const risk = [];
   [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
     arr.forEach((r,i)=>{
-      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const q = r.prev + r.todayAdd;
       const now = nowMetrics(r,model,q), pv = prevMetrics(r,model);
       if(pv.rebate>0 && now.rebate < pv.rebate) risk.push(model+' '+r.group+'（'+fmt(pv.unit)+' → '+fmt(now.unit)+' 元/台，'+fmt(pv.rebate-now.rebate)+' 元）');
     });
@@ -272,9 +324,9 @@ function exportCsv(){
   const rows=[['车型','集团','同城主体','1-10锁单','上旬日均','昨日累计','今日新增','实时锁单','100%档目标','距100%缺口','实时系数A','实时单价','实时返利','昨日口径返利','今日增量']];
   [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
     arr.forEach((r,i)=>{
-      const q=r.prev+Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const q=r.prev+r.todayAdd;
       const now=nowMetrics(r,model,q), pv=prevMetrics(r,model);
-      rows.push([model,r.group,r.entity,r.d1,r.d1Avg.toFixed(1),r.prev,Number(document.getElementById('in-'+model+'-'+i).value||0),q,r.target100,now.gap,now.coef==null?'':(now.coef*100).toFixed(1)+'%',now.unit,now.rebate,pv.rebate,now.rebate-pv.rebate]);
+      rows.push([model,r.group,r.entity,r.d1,r.d1Avg.toFixed(1),r.prev,r.todayAdd,q,r.target100,now.gap,now.coef==null?'':(now.coef*100).toFixed(1)+'%',now.unit,now.rebate,pv.rebate,now.rebate-pv.rebate]);
     });
   });
   const csv='\ufeff'+rows.map(r=>r.join(',')).join('\n');
@@ -293,6 +345,8 @@ function tickCd(){
 }
 setInterval(tickCd,1000);
 tickCd();
+// 记录 17:00 快照原值，供「恢复原始数据」与「已改动」高亮使用
+DATA.b10.concat(DATA.c10).forEach(r=>{ if(r.todayAdd0==null) r.todayAdd0 = r.todayAdd; });
 renderHead('h-b10'); renderHead('h-c10');
 recalc();
 </script>
