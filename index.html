@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10月限时 B10/C10 打榜激励 · 实时返利计算看板（方任昊 · 东莞）</title>
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#121a33; --card:#16204a; --line:#24305c;
+    --txt:#e8ecf8; --sub:#9aa8cc; --gold:#ffcc4d; --red:#ff5a4e; --green:#3ddc97; --blue:#5aa9ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg) 0%,#0a0f22 100%);color:var(--txt);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 14px 60px}
+  header{background:linear-gradient(135deg,#c0201c 0%,#e1451f 45%,#f08a1a 100%);border-radius:16px;padding:18px 20px;
+    box-shadow:0 10px 30px rgba(200,40,30,.28)}
+  h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.5px}
+  .sub{margin-top:6px;font-size:13px;color:rgba(255,255,255,.86)}
+  .cd{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .cdbox{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-align:center}
+  .cdbox b{display:block;font-size:22px;color:#fff;font-variant-numeric:tabular-nums}
+  .cdbox span{font-size:11px;color:rgba(255,255,255,.75)}
+  .cdbox.hot b{color:var(--gold)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .kpi .k{font-size:12px;color:var(--sub)}
+  .kpi .v{font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .x{font-size:12px;color:var(--sub);margin-top:2px}
+  .kpi.gold .v{color:var(--gold)} .kpi.green .v{color:var(--green)} .kpi.red .v{color:var(--red)} .kpi.blue .v{color:var(--blue)}
+  h2{font-size:17px;margin:26px 0 10px;padding-left:10px;border-left:4px solid var(--red)}
+  h2 small{font-weight:400;color:var(--sub);font-size:12px;margin-left:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07)}
+  th:first-child,td:first-child,th.l,td.l{text-align:left}
+  thead th{background:rgba(255,255,255,.05);color:var(--sub);font-weight:600;font-size:12px;position:sticky;top:0}
+  tbody tr:hover{background:rgba(90,169,255,.07)}
+  tr.tot td{font-weight:800;background:rgba(255,204,77,.10);color:var(--gold);border-top:2px solid rgba(255,204,77,.4)}
+  tr.zero td{opacity:.45}
+  .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+  .t0{background:rgba(255,90,78,.18);color:#ff8a7a}
+  .t1{background:rgba(90,169,255,.18);color:#8ec5ff}
+  .t2{background:rgba(61,220,151,.18);color:#6ee7b7}
+  .t3{background:rgba(255,204,77,.20);color:#ffd873}
+  .up{color:var(--green)} .down{color:var(--red)}
+  input.num{width:62px;background:#0d1430;border:1px solid var(--line);border-radius:8px;color:#fff;
+    text-align:right;padding:5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
+  input.num:focus{outline:none;border-color:var(--blue)}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button{background:#1e2a55;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:7px 14px;font-size:13px;cursor:pointer}
+  button:hover{background:#27356b}
+  button.primary{background:linear-gradient(135deg,#e1451f,#f0971a);border:none;font-weight:700}
+  .rule{font-size:13px;color:#cfd8f5;line-height:1.9}
+  .rule b{color:var(--gold)}
+  .rule code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:5px}
+  .note{margin-top:10px;font-size:12px;color:var(--sub)}
+  .footnote{margin-top:26px;text-align:center;color:#66739c;font-size:12px}
+  .hlbox{background:rgba(255,204,77,.08);border:1px dashed rgba(255,204,77,.45);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:13px;color:#ffe9b0}
+  @media(max-width:640px){ h1{font-size:18px} .kpi .v{font-size:22px} table{font-size:12px} th,td{padding:6px 7px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>10月限时 B10 / C10 打榜激励 · 实时返利计算看板</h1>
+  <div class="sub">零售高级经理：方任昊 · 东莞市 &nbsp;|&nbsp; 数据快照：2026-10-25 17:00（含今日新增） &nbsp;|&nbsp; 源：<a style="color:#fff" href="__SRCURL__" target="_blank">车型激励打榜赛 · 华南</a></div>
+  <div class="cd" id="cd"></div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="hlbox" id="hlbox"></div>
+
+<h2>B10 打榜 <small>基数 1200 元/台 · 政策期 10.11-10.25</small></h2>
+<div class="card"><table id="t-b10"><thead id="h-b10"></thead><tbody id="b-b10"></tbody></table></div>
+
+<h2>C10 打榜 <small>基数 1500 元/台 · 政策期 10.11-10.25</small></h2>
+<div class="card"><table id="t-c10"><thead id="h-c10"></thead><tbody id="b-c10"></tbody></table></div>
+
+<div class="btnrow">
+  <button class="primary" onclick="recalc()">重新计算</button>
+  <button onclick="resetAll()">恢复 17:00 原始数据</button>
+  <button onclick="clearAdd()">今日新增全部归零</button>
+  <button onclick="exportCsv()">导出 CSV（含明细）</button>
+</div>
+
+<h2>冲档机会 <small>按「再锁多少台 → 收益增加多少」排序，供最后几小时做决策</small></h2>
+<div class="card"><table id="t-next"><thead id="h-next"></thead><tbody id="b-next"></tbody></table></div>
+
+<h2>激励规则 <small>取自华南打榜海报原文</small></h2>
+<div class="card rule">
+  <div><b>系数 A</b> = <code>11-25 日车型日均净增锁单 ÷ 1-10 日车型日均净增锁单</code>（政策原文：11-25 日日均 ÷ 1-10 日日均）</div>
+  <div style="margin-top:6px"><b>奖励金额</b> = <code>10.11-10.25 锁单、且最终交付时间在 2026-12-31 24:00 之前的台数 × 对应档位单车支持金额</code></div>
+  <div style="margin-top:6px"><b>100% 档位目标台数</b> = <code>1-10 日日均 × 15 天</code>（向上取整）；缺口 = 目标 − 实时锁单台数</div>
+  <table style="margin-top:12px;text-align:center">
+    <thead><tr><th>档位（系数 A）</th><th>B10 单车支持</th><th>C10 单车支持</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 50%</td><td>0 元/台</td><td>0 元/台</td></tr>
+      <tr><td>50% ≤ A &lt; 60%</td><td>600（1200×0.5）</td><td>750（1500×0.5）</td></tr>
+      <tr><td>60% ≤ A &lt; 70%</td><td>720</td><td>900</td></tr>
+      <tr><td>70% ≤ A &lt; 80%</td><td>840</td><td>1050</td></tr>
+      <tr><td>80% ≤ A &lt; 90%</td><td>960</td><td>1200</td></tr>
+      <tr><td>90% ≤ A &lt; 100%</td><td>1080</td><td>1350</td></tr>
+      <tr><td>100% ≤ A</td><td>1200</td><td>1500</td></tr>
+    </tbody>
+  </table>
+  <div class="note">口径说明：页面源数据为「截至 10.24 锁单、日均按 14 天」；本看板按政策期完整 15 天折算实时系数 A。<b>因此今日（10.25）若无新增，系数 A 会被 15 天分母稀释，存在跌档风险</b>，已用「昨日口径返利」列对标。</div>
+</div>
+
+<div class="footnote">看板生成于 2026-10-25 20:00 · 数据在浏览器本地实时计算，改动「今日新增」后点「重新计算」即可 · Windows 按 Ctrl+F5 / Mac 按 Cmd+Shift+R 刷新缓存</div>
+
+</div>
+
+<script>
+window.onerror=function(m,s,l){var e=document.getElementById('hlbox');if(e)e.textContent='JS错误: '+m+' @line '+l;};
+const DATA = {"manager": "方任昊", "base": {"B10": 1200, "C10": 1500}, "b10": [{"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-彭飞", "group": "东朋", "d1": 20.0, "d1Avg": 2.0, "prev": 13.0, "todayAdd": 4, "qty": 17.0, "target100": 30, "gapOff": 17.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-黄志泉", "group": "一维", "d1": 11.0, "d1Avg": 1.1, "prev": 10.0, "todayAdd": 2, "qty": 12.0, "target100": 17, "gapOff": 7.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-陈震华", "group": "华跃-虎门", "d1": 1.0, "d1Avg": 0.1, "prev": 8.0, "todayAdd": 0, "qty": 8.0, "target100": 2, "gapOff": 0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-张义", "group": "东富-寮步", "d1": 10.0, "d1Avg": 1.0, "prev": 7.0, "todayAdd": 0, "qty": 7.0, "target100": 15, "gapOff": 8.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-唐玉华", "group": "骏威", "d1": 0.0, "d1Avg": 0.0, "prev": 0.0, "todayAdd": 0, "qty": 0.0, "target100": 0, "gapOff": 0}], "c10": [{"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-彭飞", "group": "东朋", "d1": 23.0, "d1Avg": 2.3, "prev": 20.0, "todayAdd": 5, "qty": 25.0, "target100": 35, "gapOff": 15.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-黄志泉", "group": "一维", "d1": 14.0, "d1Avg": 1.4, "prev": 15.0, "todayAdd": 5, "qty": 20.0, "target100": 21, "gapOff": 6.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-张义", "group": "东富-寮步", "d1": 17.0, "d1Avg": 1.7, "prev": 11.0, "todayAdd": 1, "qty": 12.0, "target100": 26, "gapOff": 15.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-陈震华", "group": "华跃-虎门", "d1": 7.0, "d1Avg": 0.7, "prev": 10.0, "todayAdd": 1, "qty": 11.0, "target100": 11, "gapOff": 1.0}, {"prov": "广东省", "city": "东莞市", "mgr": "方任昊", "entity": "合作伙伴-东莞市-唐玉华", "group": "骏威", "d1": 0.0, "d1Avg": 0.0, "prev": 0.0, "todayAdd": 0, "qty": 0.0, "target100": 0, "gapOff": 0}], "sourceUrl": "https://dorameimeimon.github.io/leapmotor-dabang-poster/", "snapshot": "2026-10-25 17:00"};
+const TIERS = [
+  {p:0.50, f:0.5}, {p:0.60, f:0.6}, {p:0.70, f:0.7}, {p:0.80, f:0.8}, {p:0.90, f:0.9}, {p:1.00, f:1.0}
+];
+const DEADLINE = new Date(2026, 9, 25, 23, 59, 59);   // 2026-10-25 24:00
+
+const fmt = n => (n==null||isNaN(n)) ? '—' : n.toLocaleString('zh-CN',{maximumFractionDigits:0});
+const money = n => '¥' + fmt(n);
+const pct = v => v==null ? '—' : (v*100).toFixed(1) + '%';
+
+function unitOf(model, coef){
+  if(coef==null) return 0;
+  const base = DATA.base[model];
+  let u = 0;
+  for(const t of TIERS){ if(coef >= t.p) u = Math.round(base * t.f); }
+  return u;
+}
+function tierLabel(model, coef, unit){
+  if(coef==null) return '<span class="tag t0">无基数</span>';
+  if(unit===0) return '<span class="tag t0">未达 50%</span>';
+  if(coef>=1.0) return '<span class="tag t3">100% 满档</span>';
+  const f = unit / DATA.base[model];
+  return '<span class="tag t2">' + Math.round(f*100) + '% 档</span>';
+}
+// 昨日口径：页面 24 号数据，日均按 14 天折算
+function prevMetrics(r, model){
+  if(r.d1<=0) return {coef:null, unit:0, rebate:0};
+  const coef = (r.prev/14) / (r.d1/10);
+  const unit = r.prev>0 ? unitOf(model, coef) : 0;
+  return {coef, unit, rebate: r.prev*unit};
+}
+function nowMetrics(r, model, qty){
+  if(r.d1<=0) return {coef:null, unit:0, rebate:0, gap:0};
+  const coef = (qty/15) / (r.d1/10);
+  const unit = qty>0 ? unitOf(model, coef) : 0;
+  return {coef, unit, rebate: qty*unit, gap: Math.max(0, r.target100 - qty)};
+}
+function nextTier(r, model, qty){
+  const now = nowMetrics(r, model, qty);
+  if(r.d1<=0) return null;
+  const avg = r.d1/10;
+  for(const t of TIERS){
+    const need = Math.ceil(t.p * avg * 15);
+    if(now.unit < Math.round(DATA.base[model]*t.f) && need > qty){
+      const after = nowMetrics(r, model, need);
+      return {need, add: need-qty, coef: after.coef, unit: after.unit, rebate: after.rebate, gain: after.rebate - now.rebate, isFull: after.unit===DATA.base[model]};
+    }
+  }
+  return null;
+}
+
+const HEAD = ['集团 / 同城主体','1-10 锁单','上旬日均','昨日(24号)累计','今日新增','实时锁单','100%档目标','距100%缺口','实时系数A','实时档位','实时单价(元/台)','实时返利预估','昨日口径返利','今日增量'];
+function renderHead(id){
+  document.getElementById(id).innerHTML = '<tr><th class="l">'+HEAD[0]+'</th>' +
+    HEAD.slice(1).map((h,i)=>'<th'+(i===3?' title="今日新增可编辑"':'')+'>'+h+'</th>').join('') + '</tr>';
+}
+function rowHtml(r, model, idx){
+  const qty = r.prev + r.todayAdd;
+  const now = nowMetrics(r, model, qty);
+  const pv  = prevMetrics(r, model);
+  const delta = now.rebate - pv.rebate;
+  return '<tr class="'+(now.rebate===0?'zero':'')+'">'+
+    '<td class="l"><b>'+r.group+'</b><div style="font-size:11px;color:#8b98c4">'+r.entity.replace('合作伙伴-东莞市-','')+'</div></td>'+
+    '<td>'+fmt(r.d1)+'</td><td>'+r.d1Avg.toFixed(1)+'</td><td>'+fmt(r.prev)+'</td>'+
+    '<td><input class="num" id="in-'+model+'-'+idx+'" value="'+r.todayAdd+'" oninput="q()"></td>'+
+    '<td><b>'+fmt(qty)+'</b></td><td>'+fmt(r.target100)+'</td><td>'+fmt(now.gap)+'</td>'+
+    '<td>'+pct(now.coef)+'</td><td>'+tierLabel(model,now.coef,now.unit)+'</td>'+
+    '<td><b>'+fmt(now.unit)+'</b></td><td><b>'+money(now.rebate)+'</b></td>'+
+    '<td>'+money(pv.rebate)+'</td>'+
+    '<td class="'+(delta>0?'up':(delta<0?'down':''))+'">'+(delta>0?'+':'')+fmt(delta).replace('-','-')+'</td>'+
+  '</tr>';
+}
+function totalsHtml(rows, model){
+  let qty=0, nowReb=0, pvReb=0, d1=0, gap=0, prev=0, inProfit=0;
+  rows.forEach((r,i)=>{
+    const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+    const now = nowMetrics(r, model, q), pv = prevMetrics(r, model);
+    qty+=q; nowReb+=now.rebate; pvReb+=pv.rebate; d1+=r.d1; gap+=now.gap; prev+=r.prev;
+    if(now.rebate>0) inProfit++;
+  });
+  return '<tr class="tot"><td class="l">合计 · '+rows.length+' 个主体</td><td>'+fmt(d1)+'</td><td>'+(d1/10).toFixed(1)+'</td><td>'+fmt(prev)+'</td><td>—</td><td>'+fmt(qty)+'</td><td>—</td><td>'+fmt(gap)+'</td><td>—</td><td>'+inProfit+' 个已入档</td><td>—</td><td>'+money(nowReb)+'</td><td>'+money(pvReb)+'</td><td class="'+(nowReb-pvReb>0?'up':'')+'">+' + fmt(nowReb-pvReb)+'</td></tr>';
+}
+function renderNext(){
+  const rows=[];
+  [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
+    arr.forEach((r,i)=>{
+      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const nx = nextTier(r, model, q);
+      if(nx) rows.push({model, group:r.group, entity:r.entity, cur:nowMetrics(r,model,q), nx, q});
+    });
+  });
+  rows.sort((a,b)=> b.nx.gain - a.nx.gain);
+  document.getElementById('h-next').innerHTML='<tr><th class="l">车型</th><th class="l">集团 / 主体</th><th>当前锁单</th><th>当前系数A</th><th>当前单价</th><th>需再锁</th><th>达到台数</th><th>新系数A</th><th>新单价</th><th>收益增加</th><th>说明</th></tr>';
+  document.getElementById('b-next').innerHTML = rows.length? rows.map(x=>
+    '<tr><td class="l">'+x.model+'</td><td class="l"><b>'+x.group+'</b></td><td>'+fmt(x.q)+'</td><td>'+pct(x.cur.coef)+'</td><td>'+fmt(x.cur.unit)+'</td>'+
+    '<td><b style="color:#ffcc4d">+'+x.nx.add+' 台</b></td><td>'+x.nx.need+'</td><td>'+pct(x.nx.coef)+'</td><td>'+fmt(x.nx.unit)+'</td>'+
+    '<td class="up"><b>+'+fmt(x.nx.gain)+'</b></td><td>'+(x.nx.isFull?'满档 100%':'升一档')+'</td></tr>'
+  ).join('') : '<tr><td colspan="11" style="text-align:center;color:#8b98c4">已全部达满档或无升档空间</td></tr>';
+  return rows.reduce((s,x)=>s+x.nx.gain,0);
+}
+function renderKpis(){
+  let nowAll=0, pvAll=0, qtyB=0, qtyC=0, inProfit=0, gapAll=0;
+  [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
+    arr.forEach((r,i)=>{
+      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const now = nowMetrics(r,model,q), pv = prevMetrics(r,model);
+      nowAll += now.rebate; pvAll += pv.rebate; gapAll += now.gap;
+      if(now.rebate>0) inProfit++;
+      if(model==='B10') qtyB+=q; else qtyC+=q;
+    });
+  });
+  document.getElementById('kpis').innerHTML =
+    kpi('gold','实时返利预估合计', money(nowAll), 'B10+C10 · 按 15 天政策期折算') +
+    kpi('green','今日新增带来的增量', (nowAll-pvAll>=0?'+':'') + money(nowAll-pvAll), '对标截至昨日(10.24)口径') +
+    kpi('blue','昨日(10.24)口径合计', money(pvAll), '页面源数据口径，日均 14 天') +
+    kpi('','15 天政策期实时锁单', fmt(qtyB+qtyC)+' 台', 'B10 '+fmt(qtyB)+' 台 · C10 '+fmt(qtyC)+' 台') +
+    kpi('red','距 100% 满档缺口', fmt(gapAll)+' 台', '仍缺台数合计（含已达标主体缺 0）') +
+    kpi('','已入档主体数', inProfit+' / '+(DATA.b10.length+DATA.c10.length), '系数 A ≥ 50% 且有锁单的主体数');
+}
+function kpi(cls,k,v,x){ return '<div class="kpi '+cls+'"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="x">'+x+'</div></div>'; }
+
+function recalc(){
+  renderHead('h-b10'); renderHead('h-c10');
+  document.getElementById('b-b10').innerHTML = DATA.b10.map((r,i)=>rowHtml(r,'B10',i)).join('');
+  document.getElementById('b-c10').innerHTML = DATA.c10.map((r,i)=>rowHtml(r,'C10',i)).join('');
+  document.getElementById('b-b10').insertAdjacentHTML('beforeend', totalsHtml(DATA.b10,'B10'));
+  document.getElementById('b-c10').insertAdjacentHTML('beforeend', totalsHtml(DATA.c10,'C10'));
+  const pot = renderNext();
+  renderKpis();
+  buildHl(pot);
+}
+let t=null;
+function q(){ clearTimeout(t); t=setTimeout(recalc, 250); }
+function resetAll(){ location.reload(); }
+function clearAdd(){
+  document.querySelectorAll('input.num').forEach(i=>i.value=0);
+  recalc();
+}
+function buildHl(pot){
+  const risk = [];
+  [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
+    arr.forEach((r,i)=>{
+      const q = r.prev + Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const now = nowMetrics(r,model,q), pv = prevMetrics(r,model);
+      if(pv.rebate>0 && now.rebate < pv.rebate) risk.push(model+' '+r.group+'（'+fmt(pv.unit)+' → '+fmt(now.unit)+' 元/台，'+fmt(pv.rebate-now.rebate)+' 元）');
+    });
+  });
+  document.getElementById('hlbox').innerHTML =
+    '<b>结论①</b>：截至 17:00 实时返利预估见上方 KPI，冲档潜在空间合计 <b>¥'+fmt(pot)+'</b>。<br>'+
+    '<b>结论②</b>：政策期今日 24:00 收口，实时系数 A 按 15 天折算'+
+    (risk.length? '，<span style="color:#ff8a7a">以下主体因今日零新增存在跌档风险：'+risk.join('；')+'</span>。' : '。')+
+    '<b>结论③</b>：最终核算以「10.11-10.25 锁单且 2026-12-31 24:00 前交付」的台数为准，锁单后需盯交付。';
+}
+function exportCsv(){
+  const rows=[['车型','集团','同城主体','1-10锁单','上旬日均','昨日累计','今日新增','实时锁单','100%档目标','距100%缺口','实时系数A','实时单价','实时返利','昨日口径返利','今日增量']];
+  [['B10',DATA.b10],['C10',DATA.c10]].forEach(([model,arr])=>{
+    arr.forEach((r,i)=>{
+      const q=r.prev+Number(document.getElementById('in-'+model+'-'+i).value||0);
+      const now=nowMetrics(r,model,q), pv=prevMetrics(r,model);
+      rows.push([model,r.group,r.entity,r.d1,r.d1Avg.toFixed(1),r.prev,Number(document.getElementById('in-'+model+'-'+i).value||0),q,r.target100,now.gap,now.coef==null?'':(now.coef*100).toFixed(1)+'%',now.unit,now.rebate,pv.rebate,now.rebate-pv.rebate]);
+    });
+  });
+  const csv='\ufeff'+rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='B10C10返利测算_方任昊_20261025.csv'; a.click();
+}
+function tickCd(){
+  const now=new Date(); let ms=DEADLINE-now;
+  if(ms<0) ms=0;
+  const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
+  document.getElementById('cd').innerHTML =
+    '<div class="cdbox hot"><b>'+h+' <span style="font-size:13px">时</span> '+String(m).padStart(2,'0')+' <span style="font-size:13px">分</span> '+String(ss).padStart(2,'0')+' <span style="font-size:13px">秒</span></b><span>距政策结束（10/25 24:00）</span></div>'+
+    '<div class="cdbox"><b>15 天</b><span>政策期 10.11-10.25</span></div>'+
+    '<div class="cdbox"><b>2026-12-31</b><span>交付截止（计入返利）</span></div>';
+}
+setInterval(tickCd,1000);
+tickCd();
+renderHead('h-b10'); renderHead('h-c10');
+recalc();
+</script>
+</body>
+</html>
